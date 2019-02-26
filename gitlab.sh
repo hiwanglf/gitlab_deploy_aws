@@ -33,9 +33,12 @@ git_data_dirs({
 })
 EOF
 
+sudo cat >> /etc/gitlab/gitlab.rb <<EOF
 nginx['redirect_http_to_https'] = true
 registry_nginx['redirect_http_to_https'] = true
 mattermost_nginx['redirect_http_to_https'] = true
+EOF
+
 
 sudo mkdir -p /etc/gitlab/ssl
 sudo chmod 700 /etc/gitlab/ssl
