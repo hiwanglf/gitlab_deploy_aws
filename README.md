@@ -3,7 +3,7 @@
 参照文档：
 https://docs.gitlab.com/ee/install/aws/index.html
 ![image](http://note.youdao.com/yws/res/4444/6FD16BA3A7A046DABB1377ACCFE939A1)
-### 一、创建IAM EC2 示例角色role
+## 一、创建IAM EC2 示例角色role
 1. 进入IAM面板
 2. 创建角色，配置权限，选择：AmazonEC2FullAccess 和AmazonS3FullAccess,
 3. 名称： GitLabAdmin
@@ -11,17 +11,17 @@ https://docs.gitlab.com/ee/install/aws/index.html
 
 ## 二、配置网络
 
-### 创建VPC
+### 2.1 创建VPC
 
-### 子网设置
+### 2.2 子网设置
 
-### 路由表设置
+### 2.3 路由表设置
 
-### 网关设置
+### 2.4 网关设置
 
-### 在路由表中配置子网
+### 2.5在路由表中配置子网
 
-### 创建vpc的安全组
+### 2.6 创建vpc的安全组
 
 ## 三、创建数据库PostgreSQL with RDS
 
