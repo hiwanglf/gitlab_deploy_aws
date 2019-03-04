@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create a test VPC
+Parameters: 
+
+  # define the area parameters for subnet
+  az1nameParameters: 
+    Description: please select first AvailabilityZone Name for 0&1 subnet
+    Type: "AWS::EC2::AvailabilityZone::Name"
+  az2nameParameters: 
+    Description: please select second AvailabilityZone Name for 2&3 subnet
+    Type: "AWS::EC2::AvailabilityZone::Name"
+  testVpc:
+    Description: VPC
+    Type: "AWS::EC2::VPC::Id"
+  public0:
+    Description: public 0
+    Type: "AWS::EC2::Subnet::Id"
+  public2:
+    Description: public2
+    Type: "AWS::EC2::Subnet::Id"
+  CertificateArn:
+    Description: The HTTPS Certificates Arn
+    Type: CommaDelimitedList
+    Default: "arn:aws:acm:ap-northeast-2:510338692548:certificate/39f4695d-20df-4641-9b90-e9a0d66f1316"
+  testElbSecGroup:
+    Description: ELB SEC Group
+    Type: List<AWS::EC2::SecurityGroup::Id>
+
+Resources:
+#-------------------------------------------------------------------------------------------------
+  # Create ELB
+#-------------------------------------------------------------------------------------------------
+  testElb:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      IpAddressType: ipv4
+      Name: testElb
+      Scheme: internet-facing 
+      SecurityGroups: !Ref testElbSecGroup
+      Subnets:
+        - Ref: public0
+        - Ref: public2
+      Type: application
+
+    # Create Elb Target 
+  testElbTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /users/sign_in
+      HealthCheckPort: 443
+      HealthCheckProtocol: HTTPS
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 4
+      Matcher: 
+        HttpCode: '200'
+      Name: testTargetGroup
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      UnhealthyThresholdCount: 3
+      VpcId: !Ref testVpc
+
+

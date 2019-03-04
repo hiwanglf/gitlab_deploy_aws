@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: config route for vpc
+Parameters: 
+  rtbParameters:
+    Description: please input rtb id to config
+    Type: "String"
+  igParameters: 
+    Description: please input just create InternetGateway ID
+    Type: "String"
+  subnet0Parameters:
+    Description: Please select subnet 0 add to route
+    Type: "AWS::EC2::Subnet::Id"
+  subnet2Parameters:
+    Description: Please select subnet 2 add to route
+    Type: "AWS::EC2::Subnet::Id"
+
+Resources:
+  testRoute:
+    Type: AWS::EC2::Route
+    Properties: 
+      DestinationCidrBlock: 0.0.0.0/0 # default route
+      GatewayId: !Ref igParameters
+      RouteTableId: !Ref rtbParameters
+  subnet0Associaion:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !Ref rtbParameters
+      SubnetId: !Ref subnet0Parameters
+  subnet2Associaion:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !Ref rtbParameters
+      SubnetId: !Ref subnet2Parameters
+

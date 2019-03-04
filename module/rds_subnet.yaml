@@ -1,0 +1,13 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create RDS Subnet Group 
+Parameters: 
+  privateSubnetParameters:
+    Description: Please select private subnet to RDS group
+    Type: "List<AWS::EC2::Subnet::Id>"
+Resources:
+  testRdsSubnet:
+    Type: "AWS::RDS::DBSubnetGroup"
+    Properties: 
+      DBSubnetGroupDescription: Create RDS Subnet
+      DBSubnetGroupName: testRdsSubnetGroup
+      SubnetIds: !Ref privateSubnetParameters

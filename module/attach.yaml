@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: attach internet gateway with the  vpc
+Parameters: 
+  vpcidParameters: 
+    Description: please select VPC ID
+    Type: "AWS::EC2::VPC::Id"
+  igParameters: 
+    Description: please input just create InternetGateway ID
+    Type: "String"
+Resources:
+  testAttach:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties: 
+      InternetGatewayId: !Ref igParameters
+      VpcId: !Ref vpcidParameters

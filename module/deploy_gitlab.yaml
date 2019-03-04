@@ -1,0 +1,180 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create a gitlab env by AWS
+
+
+Parameters: 
+
+  # define the area parameters for subnet
+  az1nameParameters: 
+    Description: please select first AvailabilityZone Name for 0&1 subnet
+    Type: "AWS::EC2::AvailabilityZone::Name"
+  az2nameParameters: 
+    Description: please select second AvailabilityZone Name for 2&3 subnet
+    Type: "AWS::EC2::AvailabilityZone::Name"
+  CertificateArn:
+    Description: The HTTPS Certificates Arn
+    Type: String
+    Default: arn:aws:acm:ap-northeast-2:510338692548:certificate/39f4695d-20df-4641-9b90-e9a0d66f1316
+
+
+Resources:
+
+  # Create VPC
+  testVpc:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: 192.168.0.0/16
+      EnableDnsSupport: false
+      EnableDnsHostnames: false
+      InstanceTenancy: default
+
+  # Create 4 Subnte
+  public0:
+    Type: 'AWS::EC2::Subnet'
+    Properties: 
+      AvailabilityZone: !Ref az1nameParameters
+      VpcId: !Ref testVpc
+      CidrBlock: 192.168.0.0/24
+  private1:
+    Type: 'AWS::EC2::Subnet'
+    Properties: 
+      AvailabilityZone: !Ref az1nameParameters
+      VpcId: !Ref testVpc
+      CidrBlock: 192.168.1.0/24
+  public2:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      AvailabilityZone: !Ref az2nameParameters
+      VpcId: !Ref testVpc
+      CidrBlock: 192.168.2.0/24
+  private3:
+    Type: 'AWS::EC2::Subnet'
+    Properties: 
+      AvailabilityZone: !Ref az2nameParameters
+      VpcId: !Ref testVpc
+      CidrBlock: 192.168.3.0/24
+
+  # Create new RouteTable
+  testRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties: 
+      VpcId: !Ref testVpc
+
+  # Create new internet gateway
+  testGateway:
+    Type: 'AWS::EC2::InternetGateway'
+  
+  # attach internet gateway to vpc
+  testAttach:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties: 
+      InternetGatewayId: !Ref testGateway
+      VpcId: !Ref testVpc
+  
+  # configure routing in RouteTable and subnet association
+  testRoute:
+    Type: AWS::EC2::Route
+    Properties: 
+      # default route
+      DestinationCidrBlock: 0.0.0.0/0
+      # default internet gateway
+      GatewayId: !Ref testGateway
+      # the routetable we need to configure
+      RouteTableId: !Ref testRouteTable
+  subnet0Associaion:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !Ref testRouteTable
+      SubnetId: !Ref public0
+  subnet2Associaion:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !Ref testRouteTable
+      SubnetId: !Ref public2
+
+
+  # Create RDS Subnet Group
+  testRdsSubnet:
+    Type: "AWS::RDS::DBSubnetGroup"
+    Properties: 
+      DBSubnetGroupDescription: Create RDS Subnet
+      DBSubnetGroupName: testRdsSubnetGroup
+      SubnetIds: 
+        - !Ref private1
+        - !Ref private3
+
+  # Create Redis Subnet Group
+  testRedisSubnet:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      CacheSubnetGroupName: testRedisSubnetGroup
+      Description: Index the private subnet for redis
+      SubnetIds:
+        - !Ref private1
+        - !Ref private3
+
+
+  # Create Security Group for ELB
+  testElbSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupName: testElbSecGroup
+      GroupDescription: elb sec group, permit 0.0.0.0/0 access 443 port 
+      SecurityGroupIngress:
+        - IpProtocol: "tcp"
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref testVpc
+
+  testEc2SecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupName: testEc2SecGroup
+      GroupDescription: ec2 sec group, permit ELB access 443 port 
+      SecurityGroupIngress:
+        - IpProtocol: "tcp"
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref testVpc
+
+  testRdsSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupName: testRdsSecGroup
+      GroupDescription: Rds sec group, permit EC2 access PostgreSQL 5432 port 
+      SecurityGroupIngress:
+        - IpProtocol: "tcp"
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: 192.168.1.0/24
+        - IpProtocol: "tcp"
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: 192.168.3.0/24
+      VpcId: !Ref testVpc
+
+  testRedisSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupName: testRedisSecGroup
+      GroupDescription: Redis sec group, permit EC2 access PostgreSQL 6379 port 
+      SecurityGroupIngress:
+        - IpProtocol: "tcp"
+          FromPort: 6379
+          ToPort: 6379
+          CidrIp: 192.168.1.0/24
+        - IpProtocol: "tcp"
+          FromPort: 6379
+          ToPort: 6379
+          CidrIp: 192.168.3.0/24
+      VpcId: !Ref testVpc
+
+
+
+
+
+
+
+

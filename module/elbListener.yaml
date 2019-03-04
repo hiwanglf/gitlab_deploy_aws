@@ -1,0 +1,12 @@
+  testElbListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties: 
+      Certificates: 
+        - arn:aws:acm:ap-northeast-2:510338692548:certificate/39f4695d-20df-4641-9b90-e9a0d66f1316
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref testElbTargetGroup
+      LoadBalancerArn: !Ref testElb
+      Port: 443
+      Protocol: HTTPS
+      SslPolicy: ELBSecurityPolicy-2016-08

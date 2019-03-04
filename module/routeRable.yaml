@@ -1,0 +1,11 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create a RouteTable for the vpc 
+Parameters: 
+  vpcidParameters: 
+    Description: please select this RouteTable association VPC ID
+    Type: "AWS::EC2::VPC::Id"
+Resources:
+  testRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties: 
+      VpcId: !Ref vpcidParameters

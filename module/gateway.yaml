@@ -1,0 +1,5 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create a Internet Gateway
+Resources:
+  testGateway:
+    Type: 'AWS::EC2::InternetGateway'

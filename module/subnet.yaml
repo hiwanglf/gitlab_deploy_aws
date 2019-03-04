@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create 4 Subnet
+Parameters: 
+  vpcidParameters: 
+    Description: please select these subnet association to VPC ID
+    Type: "AWS::EC2::VPC::Id"
+  az1nameParameters: 
+    Description: please select first AvailabilityZone Name for 0&1 subnet
+    Type: "AWS::EC2::AvailabilityZone::Name"
+  az2nameParameters: 
+    Description: please select second AvailabilityZone Name for 2&3 subnet
+    Type: "AWS::EC2::AvailabilityZone::Name"
+Resources:
+  public0:
+    Type: 'AWS::EC2::Subnet'
+    Properties: 
+      AvailabilityZone: !Ref az1nameParameters
+      VpcId: !Ref vpcidParameters
+      CidrBlock: 192.168.0.0/24
+  private1:
+    Type: 'AWS::EC2::Subnet'
+    Properties: 
+      AvailabilityZone: !Ref az1nameParameters
+      VpcId: !Ref vpcidParameters
+      CidrBlock: 192.168.1.0/24
+  public2:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      AvailabilityZone: !Ref az2nameParameters
+      VpcId: !Ref vpcidParameters
+      CidrBlock: 192.168.2.0/24
+  private3:
+    Type: 'AWS::EC2::Subnet'
+    Properties: 
+      AvailabilityZone: !Ref az2nameParameters
+      VpcId: !Ref vpcidParameters
+      CidrBlock: 192.168.3.0/24
