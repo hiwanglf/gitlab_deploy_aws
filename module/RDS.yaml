@@ -33,24 +33,40 @@ Parameters:
     Description: test ELB
     Type: String
     Default: arn:aws:elasticloadbalancing:ap-northeast-2:510338692548:loadbalancer/app/testElb/99e8e9bcc338d0b7
+  testRedisSecGroup:
+    Description: Redis SEC Group
+    Type: List<AWS::EC2::SecurityGroup::Id>
+  testRedisSubnet:
+    Description: Redis Subnet
+    Type: String
+    Default: testredissubnetgroup
+  testRdsSecGroup:
+    Description: RDS SecurityGroup
+    Type: List<AWS::EC2::SecurityGroup::Id>
+  testRdsSubnet:
+    Description: RDS Subnet
+    Type: String
+    Default: testRdsSubnetGroup
 
 Resources:
-  # testElbListenerCert:
-  #   Type: AWS::ElasticLoadBalancingV2::ListenerCertificate
-  #   Properties:
-  #     Certificates: 
-  #       - arn:aws:acm:ap-northeast-2:510338692548:certificate/39f4695d-20df-4641-9b90-e9a0d66f1316
-  #   ListenerArn: !Ref testElbListener
-  
-  testElbListener:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    Properties: 
-      Certificates: 
-        - CertificateArn: arn:aws:acm:ap-northeast-2:510338692548:certificate/39f4695d-20df-4641-9b90-e9a0d66f1316
-      DefaultActions:
-        - Type: forward
-          TargetGroupArn: !Ref testElbTargetGroup
-      LoadBalancerArn: !Ref testElb
-      Port: 443
-      Protocol: HTTPS
-      SslPolicy: ELBSecurityPolicy-2016-08
+  testdb:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: 20      # db storage(GB)
+      AllowMajorVersionUpgrade: false
+      AutoMinorVersionUpgrade: false
+      BackupRetentionPeriod: 0
+      CopyTagsToSnapshot: false
+      DBInstanceClass: db.t2.micro
+      DBInstanceIdentifier: test-db
+      DBSubnetGroupName: !Ref testRdsSubnet
+      DeletionProtection: false
+      Engine: postgres
+      EngineVersion: 9.6.11
+      MasterUsername: master
+      MasterUserPassword: xx745133483
+      MonitoringInterval: 0
+      MultiAZ: true
+      Port: 5432
+      PubliclyAccessible: false
+      VPCSecurityGroups: !Ref testRdsSecGroup

@@ -3,6 +3,47 @@
 参照文档：
 https://docs.gitlab.com/ee/install/aws/index.html
 ![image](http://note.youdao.com/yws/res/4444/6FD16BA3A7A046DABB1377ACCFE939A1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## 一、创建IAM EC2 示例角色role
 1. 进入IAM面板
 2. 创建角色，配置权限，选择：AmazonEC2FullAccess 和AmazonS3FullAccess,

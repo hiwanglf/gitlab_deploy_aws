@@ -33,24 +33,26 @@ Parameters:
     Description: test ELB
     Type: String
     Default: arn:aws:elasticloadbalancing:ap-northeast-2:510338692548:loadbalancer/app/testElb/99e8e9bcc338d0b7
+  testRedisSecGroup:
+    Description: Redis SEC Group
+    Type: List<AWS::EC2::SecurityGroup::Id>
+  testRedisSubnet:
+    Description: Redis Subnet
+    Type: String
+    Default: testredissubnetgroup
 
 Resources:
-  # testElbListenerCert:
-  #   Type: AWS::ElasticLoadBalancingV2::ListenerCertificate
-  #   Properties:
-  #     Certificates: 
-  #       - arn:aws:acm:ap-northeast-2:510338692548:certificate/39f4695d-20df-4641-9b90-e9a0d66f1316
-  #   ListenerArn: !Ref testElbListener
-  
-  testElbListener:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    Properties: 
-      Certificates: 
-        - CertificateArn: arn:aws:acm:ap-northeast-2:510338692548:certificate/39f4695d-20df-4641-9b90-e9a0d66f1316
-      DefaultActions:
-        - Type: forward
-          TargetGroupArn: !Ref testElbTargetGroup
-      LoadBalancerArn: !Ref testElb
-      Port: 443
-      Protocol: HTTPS
-      SslPolicy: ELBSecurityPolicy-2016-08
+  testRedis:
+    Type: AWS::ElastiCache::CacheCluster
+    Properties:
+      AutoMinorVersionUpgrade: false
+      CacheNodeType: cache.t2.micro
+      VpcSecurityGroupIds: 
+      CacheSubnetGroupName: !Ref testRedisSubnet
+      Engine: redis
+      EngineVersion: 3.2.10
+      NumCacheNodes: 1
+      Port: 6379
+      SnapshotRetentionLimit: 0
+      VpcSecurityGroupIds: !Ref testRedisSecGroup
+

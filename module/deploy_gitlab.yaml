@@ -19,7 +19,9 @@ Parameters:
 
 Resources:
 
-  # Create VPC
+#--------------------------------------------------------------------------------------------
+# VPC
+#--------------------------------------------------------------------------------------------
   testVpc:
     Type: 'AWS::EC2::VPC'
     Properties:
@@ -28,7 +30,9 @@ Resources:
       EnableDnsHostnames: false
       InstanceTenancy: default
 
-  # Create 4 Subnte
+#--------------------------------------------------------------------------------------------
+# Subnet
+#--------------------------------------------------------------------------------------------
   public0:
     Type: 'AWS::EC2::Subnet'
     Properties: 
@@ -54,24 +58,32 @@ Resources:
       VpcId: !Ref testVpc
       CidrBlock: 192.168.3.0/24
 
-  # Create new RouteTable
+#--------------------------------------------------------------------------------------------
+# Route Table
+#--------------------------------------------------------------------------------------------
   testRouteTable:
     Type: 'AWS::EC2::RouteTable'
     Properties: 
       VpcId: !Ref testVpc
 
-  # Create new internet gateway
+#--------------------------------------------------------------------------------------------
+# Internet Gateway
+#--------------------------------------------------------------------------------------------
   testGateway:
     Type: 'AWS::EC2::InternetGateway'
   
-  # attach internet gateway to vpc
+#--------------------------------------------------------------------------------------------
+# Attachment Internet Gateway to VPC
+#--------------------------------------------------------------------------------------------
   testAttach:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties: 
       InternetGatewayId: !Ref testGateway
       VpcId: !Ref testVpc
   
-  # configure routing in RouteTable and subnet association
+#--------------------------------------------------------------------------------------------
+# Default Route
+#--------------------------------------------------------------------------------------------
   testRoute:
     Type: AWS::EC2::Route
     Properties: 
@@ -81,6 +93,10 @@ Resources:
       GatewayId: !Ref testGateway
       # the routetable we need to configure
       RouteTableId: !Ref testRouteTable
+
+#--------------------------------------------------------------------------------------------
+# Route Association to Public Subnet
+#--------------------------------------------------------------------------------------------
   subnet0Associaion:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties: 
@@ -93,7 +109,9 @@ Resources:
       SubnetId: !Ref public2
 
 
-  # Create RDS Subnet Group
+#--------------------------------------------------------------------------------------------
+# RDS Subnet Group
+#--------------------------------------------------------------------------------------------
   testRdsSubnet:
     Type: "AWS::RDS::DBSubnetGroup"
     Properties: 
@@ -103,7 +121,9 @@ Resources:
         - !Ref private1
         - !Ref private3
 
-  # Create Redis Subnet Group
+#--------------------------------------------------------------------------------------------
+# Redis Subnet Group
+#--------------------------------------------------------------------------------------------
   testRedisSubnet:
     Type: AWS::ElastiCache::SubnetGroup
     Properties:
@@ -113,7 +133,9 @@ Resources:
         - !Ref private1
         - !Ref private3
 
-
+#--------------------------------------------------------------------------------------------
+# ELB Security Group
+#--------------------------------------------------------------------------------------------
   # Create Security Group for ELB
   testElbSecGroup:
     Type: AWS::EC2::SecurityGroup
@@ -126,7 +148,9 @@ Resources:
           ToPort: 443
           CidrIp: 0.0.0.0/0
       VpcId: !Ref testVpc
-
+#--------------------------------------------------------------------------------------------
+# EC2 Security Group
+#--------------------------------------------------------------------------------------------
   testEc2SecGroup:
     Type: AWS::EC2::SecurityGroup
     Properties: 
@@ -138,7 +162,9 @@ Resources:
           ToPort: 443
           CidrIp: 0.0.0.0/0
       VpcId: !Ref testVpc
-
+#--------------------------------------------------------------------------------------------
+# RDS Security Group
+#--------------------------------------------------------------------------------------------
   testRdsSecGroup:
     Type: AWS::EC2::SecurityGroup
     Properties: 
@@ -154,7 +180,9 @@ Resources:
           ToPort: 5432
           CidrIp: 192.168.3.0/24
       VpcId: !Ref testVpc
-
+#--------------------------------------------------------------------------------------------
+# Redis Security Group
+#--------------------------------------------------------------------------------------------
   testRedisSecGroup:
     Type: AWS::EC2::SecurityGroup
     Properties: 
@@ -172,9 +200,120 @@ Resources:
       VpcId: !Ref testVpc
 
 
+#--------------------------------------------------------------------------------------------
+# ELB 
+#--------------------------------------------------------------------------------------------
+  testElb:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      IpAddressType: ipv4
+      Name: testElb
+      Scheme: internet-facing 
+      SecurityGroups: 
+        - Ref: testElbSecGroup
+      Subnets:
+        - Ref: public0
+        - Ref: public2
+      Type: application
+#--------------------------------------------------------------------------------------------
+# ELB target
+#--------------------------------------------------------------------------------------------
+  testElbTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /users/sign_in
+      HealthCheckPort: 443
+      HealthCheckProtocol: HTTPS
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 4
+      Matcher: 
+        HttpCode: '200'
+      Name: testTargetGroup
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      UnhealthyThresholdCount: 3
+      VpcId: !Ref testVpc
+#--------------------------------------------------------------------------------------------
+# ELB Listener
+#--------------------------------------------------------------------------------------------
+  testElbListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties: 
+      Certificates: 
+        - CertificateArn: !Ref CertificateArn
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref testElbTargetGroup
+      LoadBalancerArn: !Ref testElb
+      Port: 443
+      Protocol: HTTPS
+      SslPolicy: ELBSecurityPolicy-2016-08
 
-
-
+#--------------------------------------------------------------------------------------------
+# Redis instance
+#--------------------------------------------------------------------------------------------
+  testRedis:
+    Type: AWS::ElastiCache::CacheCluster
+    Properties:
+      AutoMinorVersionUpgrade: false
+      CacheNodeType: cache.t2.micro
+      VpcSecurityGroupIds: 
+      CacheSubnetGroupName: !Ref testRedisSubnet
+      Engine: redis
+      EngineVersion: 3.2.10
+      NumCacheNodes: 1
+      Port: 6379
+      SnapshotRetentionLimit: 0
+      VpcSecurityGroupIds: 
+        - Ref: testRedisSecGroup
+#--------------------------------------------------------------------------------------------
+# PostgreSQL instance
+#--------------------------------------------------------------------------------------------
+  testdb:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: 20      # db storage(GB)
+      AllowMajorVersionUpgrade: false
+      AutoMinorVersionUpgrade: false
+      BackupRetentionPeriod: 0
+      CopyTagsToSnapshot: false
+      DBInstanceClass: db.t2.micro
+      DBInstanceIdentifier: test-db
+      DBSubnetGroupName: !Ref testRdsSubnet
+      DeletionProtection: false
+      Engine: postgres
+      EngineVersion: 9.6.11
+      MasterUsername: master
+      MasterUserPassword: xx745133483
+      MonitoringInterval: 0
+      MultiAZ: true
+      Port: 5432
+      PubliclyAccessible: false
+      VPCSecurityGroups: 
+        - Ref: testRdsSecGroup
+#--------------------------------------------------------------------------------------------
+# AutoScaling LaunchConfiguration
+#--------------------------------------------------------------------------------------------
+  testLaunchConfiguration:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      AssociatePublicIpAddress: false
+      ImageId: ami-007b2c3a7b3239792
+      InstanceMonitoring: false
+      InstanceType: t2.medium
+      KeyName: aws-shouer-gitlab
+      LaunchConfigurationName: testLauConfig
+      SecurityGroups: 
+        - Ref: testEc2SecGroup
+      # UserData: !Ref bootConfig
+      BlockDeviceMappings:
+        - DeviceName: "/dev/sda1"
+          Ebs:
+            VolumeSize: "8"
+            VolumeType: "gp2"
+            Iops: 100
 
 
 

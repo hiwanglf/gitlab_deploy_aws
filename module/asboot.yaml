@@ -33,24 +33,36 @@ Parameters:
     Description: test ELB
     Type: String
     Default: arn:aws:elasticloadbalancing:ap-northeast-2:510338692548:loadbalancer/app/testElb/99e8e9bcc338d0b7
+  testRedisSecGroup:
+    Description: Redis SEC Group
+    Type: List<AWS::EC2::SecurityGroup::Id>
+  testRedisSubnet:
+    Description: Redis Subnet
+    Type: String
+    Default: testredissubnetgroup
+  testRdsSecGroup:
+    Description: RDS SecurityGroup
+    Type: List<AWS::EC2::SecurityGroup::Id>
+  testRdsSubnet:
+    Description: RDS Subnet
+    Type: String
+    Default: testRdsSubnetGroup
+  testEc2SecGroup:
+    Description: EC2 SecurityGroup
+    Type: List<AWS::EC2::SecurityGroup::Id>
+  testElbTargetGroup:
+    Description: TargetGroupARNs
+    Type: CommaDelimitedList
+    Default: "arn:aws:elasticloadbalancing:ap-northeast-2:510338692548:targetgroup/testTargetGroup/c6f2d21cc999211c,"
 
 Resources:
-  # testElbListenerCert:
-  #   Type: AWS::ElasticLoadBalancingV2::ListenerCertificate
-  #   Properties:
-  #     Certificates: 
-  #       - arn:aws:acm:ap-northeast-2:510338692548:certificate/39f4695d-20df-4641-9b90-e9a0d66f1316
-  #   ListenerArn: !Ref testElbListener
-  
-  testElbListener:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    Properties: 
-      Certificates: 
-        - CertificateArn: arn:aws:acm:ap-northeast-2:510338692548:certificate/39f4695d-20df-4641-9b90-e9a0d66f1316
-      DefaultActions:
-        - Type: forward
-          TargetGroupArn: !Ref testElbTargetGroup
-      LoadBalancerArn: !Ref testElb
-      Port: 443
-      Protocol: HTTPS
-      SslPolicy: ELBSecurityPolicy-2016-08
+  testAutoScall:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AutoScalingGroupName: testAS
+      AvailabilityZones:
+        Fn::GetAZs: 
+          Ref: "AWS::Region"
+      LaunchConfigurationName: testLauConfig
+      MaxSize: "3"
+      MinSize: "1"
